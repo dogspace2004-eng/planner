@@ -141,14 +141,6 @@ button.small{padding:2px 8px;font-size:12px}
 .cat-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:20px;font-size:12px;margin:3px;cursor:default}
 .cat-pill button{background:none;border:none;padding:0;cursor:pointer;font-size:11px;line-height:1;opacity:0.6}
 .cat-pill button:hover{opacity:1}
-/* STATS */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px}
-.stat-card{background:#fff;border:1px solid #e5e5ea;border-radius:12px;padding:13px;text-align:center}
-.stat-val{font-size:21px;font-weight:600}
-.stat-lbl{font-size:11px;color:#8e8e93;margin-top:2px}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.bar-track{flex:1;height:7px;background:#f2f2f7;border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;background:#007aff;border-radius:4px}
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:100;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -226,7 +218,6 @@ button.small{padding:2px 8px;font-size:12px}
     <button class="tab active" onclick="sw('today')">Сегодня</button>
     <button class="tab" onclick="sw('calendar')">Календарь</button>
     <button class="tab" onclick="sw('finance')">Финансы</button>
-    <button class="tab" onclick="sw('stats')">Статистика</button>
     <button class="tab" onclick="sw('students')">Ученики</button>
   </div>
 
@@ -307,12 +298,6 @@ button.small{padding:2px 8px;font-size:12px}
       </div>
     </div>
     <div class="card"><div id="fin-list"></div></div>
-  </div>
-
-  <div id="v-stats" class="view">
-    <div class="stat-grid" id="stat-grid"></div>
-    <div class="card"><div class="section-label">Доход по ученикам (неделя)</div><div id="income-breakdown"></div></div>
-    <div class="card"><div class="section-label">По дням</div><div id="days-breakdown"></div></div>
   </div>
 
   <div id="v-students" class="view">
@@ -906,23 +891,12 @@ function renderStudentsList(){
   document.getElementById('students-list').innerHTML=students.length?students.map(s=>`<div class="price-row"><div class="avatar">${ini(s.name)}</div><div style="flex:1;margin-left:6px;font-size:13px;font-weight:500">${s.name}</div><div style="color:#6e6e73;min-width:70px;text-align:right;font-size:13px">${s.price} ₽/ч</div>${isReadOnly?'':`<button class="small danger" onclick="removeStudent('${s.id}')">удалить</button>`}</div>`).join(''):'<div class="empty">Нет учеников</div>';
 }
 
-// ============ STATS ============
-function renderStats(){
-  const dates=weekDates(weekOffset),weekEvs=getAllEventsForWeek(dates).filter(ev=>ev.type==='lesson');
-  let totalH=0,totalIncome=0;const bySt={};
-  weekEvs.forEach(ev=>{const h=durH(ev.start,ev.end),earn=evEarn(ev);totalH+=h;totalIncome+=earn;const st=getSt(ev.studentId);if(!bySt[ev.studentId])bySt[ev.studentId]={name:st.name,price:st.price||0,count:0,hours:0,income:0};bySt[ev.studentId].count++;bySt[ev.studentId].hours+=h;bySt[ev.studentId].income+=earn;});
-  document.getElementById('stat-grid').innerHTML=`<div class="stat-card"><div class="stat-val">${weekEvs.length}</div><div class="stat-lbl">уроков в неделю</div></div><div class="stat-card"><div class="stat-val">${fmtH(totalH)}</div><div class="stat-lbl">часов уроков</div></div><div class="stat-card"><div class="stat-val">${Math.round(totalIncome).toLocaleString()} ₽</div><div class="stat-lbl">доход в неделю</div></div><div class="stat-card"><div class="stat-val">${Math.round(totalIncome*4).toLocaleString()} ₽</div><div class="stat-lbl">~доход в месяц</div></div>`;
-  const rows=Object.values(bySt);
-  document.getElementById('income-breakdown').innerHTML=rows.length?rows.sort((a,b)=>b.income-a.income).map(r=>`<div class="price-row"><div class="avatar">${ini(r.name)}</div><div style="flex:1;margin-left:6px"><div>${r.name}</div><div style="font-size:11px;color:#8e8e93">${r.count} ур. · ${fmtH(r.hours)} · ${r.price} ₽/ч</div></div><div style="font-weight:600">${Math.round(r.income).toLocaleString()} ₽</div></div>`).join(''):'<div class="empty">Нет уроков</div>';
-  const maxI=Math.max(...dates.map(d=>getEventsForDate(dateKey(d)).filter(ev=>ev.type==='lesson').reduce((s,ev)=>s+evEarn(ev),0)),1);
-  document.getElementById('days-breakdown').innerHTML=DAYS_SHORT.map((d,i)=>{const dk=dateKey(dates[i]),dl=getEventsForDate(dk).filter(ev=>ev.type==='lesson'),di=dl.reduce((s,ev)=>s+evEarn(ev),0);return`<div class="bar-row"><span style="font-size:12px;color:#6e6e73;min-width:22px">${d}</span><div class="bar-track"><div class="bar-fill" style="width:${di?Math.round(di/maxI*100):0}%"></div></div><span style="font-size:12px;color:#6e6e73;min-width:16px;text-align:right">${dl.length}</span><span style="font-size:12px;color:#34c759;min-width:60px;text-align:right">${di?Math.round(di).toLocaleString()+' ₽':''}</span></div>`;}).join('');
-}
 
 // ============ TAB SWITCH ============
 function sw(t){
-  ['today','calendar','finance','stats','students'].forEach(v=>document.getElementById('v-'+v).classList.toggle('active',v===t));
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['today','calendar','finance','stats','students'][i]===t));
-  if(t==='today')renderToday();if(t==='calendar')renderCalendar();if(t==='finance')renderFinance();if(t==='stats')renderStats();
+  ['today','calendar','finance','students'].forEach(v=>document.getElementById('v-'+v).classList.toggle('active',v===t));
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['today','calendar','finance','students'][i]===t));
+  if(t==='today')renderToday();if(t==='calendar')renderCalendar();if(t==='finance')renderFinance();
 }
 
 function render(){renderToday();renderStudentsList();}
