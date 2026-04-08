@@ -689,7 +689,7 @@ function renderCalendar(){
       const st=ev.type==='lesson'?getSt(ev.studentId):null;
       const label=ev.type==='lesson'?st.name:(ev.title||TYPE_LABELS[ev.type]);
       const earn=evEarn(ev);
-      el.innerHTML=`<div class="cal-event-name">${ev.recurType!=='once'?'↻ ':''}${label}</div><div class="cal-event-time">${ev.start}–${ev.end} ${fmtDur(ev.start,ev.end)}</div>${ev.comment?`<div class="cal-event-comment">${ev.comment}</div>`:''}${earn>0?`<div style="font-size:10px;opacity:0.85">${Math.round(earn)} ₽</div>`:''}`+(isReadOnly?'':'`<button class="del-btn" onclick="promptDelete(\''+ev.id+'\',\''+ev._instanceDate+'\');event.stopPropagation()">✕</button>`');
+      el.innerHTML=`<div class="cal-event-name">${ev.recurType!=='once'?'↻ ':''}${label}</div><div class="cal-event-time">${ev.start}–${ev.end} ${fmtDur(ev.start,ev.end)}</div>${ev.comment?`<div class="cal-event-comment">${ev.comment}</div>`:''}`+(isReadOnly?'':'`<button class="del-btn" onclick="promptDelete(\''+ev.id+'\',\''+ev._instanceDate+'\');event.stopPropagation()">✕</button>`');
       // fix template literal issue
       if(!isReadOnly){const db=document.createElement('button');db.className='del-btn';db.textContent='✕';db.onclick=(e)=>{e.stopPropagation();promptDelete(ev.id,ev._instanceDate);};el.appendChild(db);}
       el.addEventListener('dragstart',e=>{if(isReadOnly)return;dragEvId=JSON.stringify({evId:ev.id,instanceDate:ev._instanceDate});const rect=el.getBoundingClientRect();dragOffsetFrac=(e.clientY-rect.top)/(TOTAL_HOURS*CELL_H);e.dataTransfer.effectAllowed='move';setTimeout(()=>el.style.opacity='0.4',0);});
